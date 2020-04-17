@@ -1,0 +1,216 @@
+
+-----------------------etl------------------------------------
+1) Start Neo4j server:
+
+/Users/johnnymonteiro/neo4j/bin/neo4j start
+
+
+
+2) Generate-metadata-mapping:
+
+/Users/johnnymonteiro/neo4j-etl-cli/bin/neo4j-etl generate-metadata-mapping \ --rdbms:url jdbc:mysql://localhost:3306/vacinas \ --rdbms:user root --rdbms:password \ --rdbms:schema vacinas.dbo > ./mapping.json
+
+
+
+
+3) Import to Neo4j database (Only tested with --using cypher:direct):
+
+/Users/johnnymonteiro/neo4j-etl-cli/bin/neo4j-etl export \ --url jdbc:mysql://localhost:3306/vacinas \ --rdbms:user root --rdbms:password Slb4ever --rdbms:schema vacinas.dbo \ --using cypher:direct \ --neo4j:url bolt://localhost:7687 --neo4j:user johnnymonteiro89@gmail.com --neo4j:password slbcampeao=2016 \ --import-tool /Users/johnnymonteiro/neo4j/bin \ --csv-directory /Users/johnnymonteiro/neo4j/import
+
+
+
+/Users/johnnymonteiro/neo4j-etl-cli/bin/neo4j-etl export \ --url jdbc:mysql://localhost:3306/vacinas \ --rdbms:user root --rdbms:password Slb4ever --destination /Users/johnnymonteiro/neo4j/data/databases/graph.db/ --import-tool /Users/johnnymonteiro/neo4j/bin/neo4j-import \  --csv-directory /Users/johnnymonteiro/neo4j/import
+
+
+----------------------northwind------------------------------
+// Create Product nodes based on each row of the Products table
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/northwind?user=root&password","Products") YIELD row 
+CREATE (p:Product {ProductID: row.ProductID})
+SET p.ProductName = row.ProductName,
+    p.CategoryID  = row.CategoryID,
+    p.SupplierID  = row.SupplierID
+ RETURN p;
+
+// Create Orders nodes
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/northwind?user=root&password","Orders") YIELD row 
+CREATE (o:Order {OrderID: row.OrderID})
+SET o.CustomerID = row.CustomerID,
+    o.EmployeeID = row.EmployeeID
+RETURN o;
+
+
+-----------------------------------------VACINAS---------------------------------------------------
+
+//Utente
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Utente") YIELD row 
+CREATE (u:Utente {idUtente: toInteger(row.idUtente)})
+SET u.nome = row.nome,
+    u.num_cidadao  = toInteger(row.num_cidadao),
+    u.contato  = row.contato,
+    u.mail = row.mail,
+    u.dataNascimento = toString(row.dataNascimento),
+    u.cidade = row.cidade
+RETURN u;
+
+//Utente (alternativo)
+//LOAD CSV WITH HEADERS FROM "file:///utente.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Utente") YIELD row 
+CREATE (:Utente {idUtente: toInteger(row.idUtente), nome: row.nome, contato: row.contato, mail: row.mail, dataNascimento: toString(row.dataNascimento), cidade: row.cidade});
+
+
+
+//Unidade 
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Unidade") YIELD row 
+CREATE (un:Unidade {idLocal: toInteger(row.idLocal)})
+SET un.nome = row.nome,
+    un.contato  = row.contato,
+    un.tipo_unidade = row.tipo_unidade,
+    un.website = row.website,
+    un.cidade = row.cidade
+ RETURN un;
+
+//Unidade (alternativo)
+//LOAD CSV WITH HEADERS FROM "file:///unidade.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Unidade") YIELD row 
+CREATE (:Unidade {idLocal: toInteger(row.idLocal), nome: row.nome, contato: row.contato, tipo_unidade: row.tipo_unidade, website: row.website, cidade:row.cidade});
+
+
+
+//Vacina
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Vacina") YIELD row 
+CREATE (v:Vacina {idVacina: toInteger(row.idVacina)})
+SET v.nome = row.nome,
+    v.intervalo  = row.intervalo,
+    v.doses = toInteger(row.doses),
+    v.doencas = row.doencas,
+    v.obs = row.obs
+ RETURN v;
+
+//Vacina (alternativo)
+//LOAD CSV WITH HEADERS FROM "file:///vacina.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Vacina") YIELD row 
+CREATE (:Vacina {idVacina: toInteger(row.idVacina), nome: row.nome, intervalo: row.intervalo, doses: toInteger(row.doses), doencas: row.doencas, obs: row.obs});
+
+
+
+//Aplicacao_Vacina
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Aplicacao_Vacina") YIELD row 
+CREATE (ap:Aplicacao_Vacina {idAplicacao: toInteger(row.idAplicacao)})
+SET ap.data = toString(row.data),
+    ap.contato  = row.contato,
+    ap.num_dose = toInteger(row.num_dose)
+RETURN ap;
+
+//Aplicacao_Vacina (alternativo)
+//LOAD CSV WITH HEADERS FROM "file:///aplicacaoVacina.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Aplicacao_Vacina") YIELD row 
+CREATE (:Aplicacao_Vacina {idAplicacao: toInteger(row.idAplicacao), data: toString(row.data), contato: row.contato, num_dose: toInteger(row.num_dose)});
+
+
+
+//Campanha
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Campanha") YIELD row 
+CREATE (c:Campanha {idCampanha: toInteger(row.idCampanha)})
+SET c.nome = row.nome,
+    c.data_inicio = toString(row.data_inicio),
+    c.data_fim  = toString(row.data_fim),
+    c.obs = row.obs
+RETURN c;´
+
+//Campanha(alternativo) 
+//LOAD CSV WITH HEADERS FROM "file:///campanha.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Campanha") YIELD row
+CREATE (:Campanha {idCampanha: toInteger(row.idCampanha), nome: row.nome, data_inicio: toString(row.data_inicio), data_fim: toString(row.data_fim), obs: row.obs});
+
+
+
+//Stock
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Stock") YIELD row 
+CREATE (s:Stock {idStock: toInteger(row.idStock)})
+SET s.nome_vacina = row.nome_vacina,
+    s.data_entrada = toString(row.data_entrada),
+    s.quantidade  = toInteger(row.quantidade),
+    s.lote = toInteger(row.lote),
+    s.validade = toString(row.validade),
+    s.laboratorio = row.laboratorio
+RETURN s;
+
+//Stock (alternativo)
+//LOAD CSV WITH HEADERS FROM "file:///stock.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Stock") YIELD row 
+CREATE (:Stock {idStock: toInteger(row.idStock), nome_vacina: row.nome_vacina, data_entrada: toString(row.data_entrada), quantidade: toInteger(row.quantidade), lote: toInteger(row.lote), validade: toString(row.validade), laboratorio: row.laboratorio});
+
+
+
+//Funcionario
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Funcionario") YIELD row 
+CREATE (f:Funcionario {idFuncionario: toInteger(row.idFuncionario)})
+SET f.nome = row.nome,
+    f.tipo_funcionario = row.tipo_funcionario,
+    f.num_cidadao  = toInteger(row.num_cidadao),
+    f.contato = row.contato
+RETURN f;
+
+//Funcionario (alternativo)
+//LOAD CSV WITH HEADERS FROM "file:///funcionario.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Funcionario") YIELD row 
+CREATE (:Funcionario {idFuncionario: toInteger(row.idFuncionario), nome: row.nome, tipo_funcionario: row.tipo_funcionario, num_cidadao: toInteger(row.num_cidadao), contato: row.contato});
+
+
+
+//INDEXES
+CREATE INDEX ON :Utente(idUtente);
+CREATE INDEX ON :Utente(nome);
+CREATE INDEX ON :Unidade(idLocal);
+CREATE INDEX ON :Unidade(nome);
+CREATE INDEX ON :Vacina(idVacina);
+CREATE INDEX ON :Vacina(nome);
+CREATE INDEX ON :Aplicacao_Vacina(idAplicacao);
+CREATE INDEX ON :Stock(idStock);
+CREATE INDEX ON :Funcionario(idFuncionario);
+CREATE INDEX ON :Campanha(idCampanha);
+
+-------------------------------------RELACIONAMENTOS--------------------------------------------------
+//relação funcionario -> unidade
+ //LOAD CSV WITH HEADERS FROM "file:///funcionario.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Funcionario") YIELD row 
+MATCH (f:Funcionario {idFuncionario: row.idFuncionario})
+MATCH (un:Unidade {idLocal: row.idLocal})
+MERGE (:Funcionario)-[:TRABALHA_EM]->(:Unidade);
+
+//realção stock -> unidade
+//LOAD CSV WITH HEADERS FROM "file:///stock.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Stock") YIELD row 
+MATCH (s:Stock {idStock: row.idStock})
+MATCH (un:Unidade {idLocal: row.idLocal})
+MERGE (s)-[:DE_CADA]->(un);
+
+
+ //relação aplicacao -> utente
+  //LOAD CSV WITH HEADERS FROM "file:///aplicacaoVacina.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Aplicacao_Vacina") YIELD row 
+MATCH (u:Utente {idUtente: row.idUtente})
+MATCH (ap:Aplicacao_Vacina {idAplicacao: row.idAplicacao})
+MERGE (ap)-[:RECEBIDA_POR]->(u);
+
+//relação aplicacao -> vacina
+  //LOAD CSV WITH HEADERS FROM "file:///aplicacaoVacina.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Aplicacao_Vacina") YIELD row 
+MATCH (v:Vacina {idVacina: row.idVacina})
+MATCH (ap:Aplicacao_Vacina {idAplicacao: row.idAplicacao})
+MERGE (ap)-[:DE_UMA]->(v);
+
+ 
+//relação aplicação -> unidade
+  //LOAD CSV WITH HEADERS FROM "file:///aplicacaoVacina.csv" AS row
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","Aplicacao_Vacina") YIELD row 
+MATCH (un:Unidade {idLocal: toInteger(row.idLocal)})
+MATCH (ap:Aplicacao_Vacina {idAplicacao: toInteger(row.idAplicacao)})
+MERGE (ap)-[:APLICADA_EM]->(un);
+
+ //relação campanha -> vacina
+CALL apoc.load.jdbc("jdbc:mysql://localhost:3306/vacinas?user=root&password","VacinaCampanha") YIELD row 
+MATCH (v:Vacina {idVacina: row.idVacina})
+MATCH (c:Campanha {idCampanha: row.idCampanha})
+MERGE (c)-[:REFERENTE]->(v);
+

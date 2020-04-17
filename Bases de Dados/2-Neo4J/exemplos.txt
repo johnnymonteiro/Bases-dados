@@ -1,0 +1,12 @@
+LOAD CSV WITH HEADERS FROM "file:products.csv" AS row
+MATCH (product:Product {productID: row.ProductID})
+MATCH (category:Category {categoryID: row.CategoryID})
+MERGE (product)-[:PART_OF]->(category);
+
+LOAD CSV WITH HEADERS FROM "file:///utente.csv" AS row
+MATCH (utente:Utente {idUtente: row.idUtente)})
+MATCH (unidade:Unidade {id: row.idLocal})
+MERGE (utente)-[:APLICACAO_VACINA]->(unidade)
+
+CREATE (utente)-[:APLICACAO_VACINA]->(unidade)
+RETURN utente, unidade;
